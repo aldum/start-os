@@ -438,7 +438,12 @@ impl ImageSource {
                         .arg(&tag)
                         .arg(&docker_platform)
                         .arg("--build-arg")
-                        .arg(format!("ARCH={}", arch));
+                        .arg(format!("ARCH={}", arch))
+                        .arg("--cache-to")
+                        .arg("type=local,dest=/var/tmp/startos/buildx-cache")
+                        .arg("--cache-from")
+                        .arg("type=local,src=/var/tmp/startos/buildx-cache")
+                        ;
 
                     // add build arguments
                     if let Some(build_args) = build_args {
