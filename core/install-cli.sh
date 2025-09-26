@@ -16,4 +16,10 @@ if [ "$PLATFORM" = "arm64" ]; then
   PLATFORM="aarch64"
 fi
 
-cargo install --path=./startos --no-default-features --features=cli,docker --bin start-cli --locked
+FEATURES=(cli)
+if [ ! "$CTOOL" = "podman" ]; then
+  FEATURES+=('docker')
+fi
+printf -v feat '%s,' "${FEATURES[@]}"
+
+cargo install --path=./startos --no-default-features --features="$feat" --bin start-cli --locked
