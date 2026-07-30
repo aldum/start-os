@@ -462,6 +462,7 @@ impl ImageSource {
                     dockerfile,
                     build_args,
                 } => {
+                    let is_docker = *CONTAINER_TOOL == "docker";
                     let workdir = workdir.as_deref().unwrap_or(Path::new("."));
                     let dockerfile = dockerfile
                         .clone()
@@ -476,7 +477,7 @@ impl ImageSource {
                     // docker buildx build ${path} -o type=image,name=start9/${id}
                     let tag = format!("start9/{id}/{image_id}:{}", new_guid());
                     let mut command = Command::new(*CONTAINER_TOOL);
-                    if *CONTAINER_TOOL == "docker" {
+                    if is_docker {
                         command.arg("buildx");
                     }
                     command
@@ -509,13 +510,17 @@ impl ImageSource {
                         }
                     }
 
-                    command
-                        .arg("-o")
-                        .arg("type=docker,dest=-")
-                        .capture(false)
-                        .pipe(Command::new(*CONTAINER_TOOL).arg("load"))
-                        .invoke(ErrorKind::Docker)
-                        .await?;
+                    if is_docker {
+                        command
+                            .arg("-o")
+                            .arg("type=docker,dest=-")
+                            .capture(false)
+                            .pipe(Command::new(*CONTAINER_TOOL).arg("load"))
+                            .invoke(ErrorKind::Docker)
+                            .await?;
+                    } else {
+                        command.invoke(ErrorKind::Docker).await?;
+                    }
                     ImageSource::DockerTag(tag.clone())
                         .load(tmp_dir, id, version, image_id, arch, into)
                         .await?;
