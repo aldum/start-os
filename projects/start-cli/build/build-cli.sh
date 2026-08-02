@@ -72,6 +72,11 @@ fi
 
 echo "FEATURES=\"$FEATURES\""
 echo "RUSTFLAGS=\"$RUSTFLAGS\""
+# Builder alias defaults to docker (build/builder-alias.sh); a host with no
+# docker environment (_ENV, the POSIX shell env-file var) uses podman instead.
+if [[ ! "$_ENV" =~ (^|-)docker($|-) ]]; then
+  CTOOL='podman'
+fi
 rust-zig-builder cargo zigbuild --manifest-path=./Cargo.toml $BUILD_FLAGS --features=$FEATURES --locked -p start-cli --bin start-cli --target=$TARGET
 if [ "$(ls -nd "target/$TARGET/$PROFILE/start-cli" | awk '{ print $3 }')" != "$UID" ]; then
   rust-zig-builder sh -c "chown -R $UID:$UID target && chown -R $UID:$UID  /usr/local/cargo"
